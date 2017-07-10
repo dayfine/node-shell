@@ -4,49 +4,52 @@ var
   ret
 
 module.exports = {
-  pwd: function () {
-    process.stdout.write(process.cwd() + '\n')
+  pwd: function (arg, done) {
+    done(process.cwd())
   },
-  date: function () {
+  date: function (arg, done) {
     ret = new Date()
-    ret = ret.toString() + '\n'
-    process.stdout.write(ret)
+    ret = ret.toString()
+    done(ret)
   },
-  ls: function () {
+  ls: function (arg, done) {
+    ret = ''
     fs.readdir('.', function (err, files) {
-      if (err) throw err
       files.forEach(function (file) {
-        process.stdout.write(file.toString() + '\n')
+        ret += file.toString()
       })
-      process.stdout.write('prompt > ')
+      done(ret)
     })
   },
-  echo: function (args) {
-    ret = args.join(' ')
-    process.stdout.write(ret)
+  echo: function (arg, done) {
+    ret = arg.join(' ')
+    done(ret)
   },
-  cat: function (filenames) {
-    for (var i = 0; i < filenames.length; i++) {
-      fs.readFile('./' + filenames[i], 'utf8', function (err, data) {
-        process.stdout.write(data)
-        process.stdout.write('prompt > ') // needs to deal with prompt in genearl
+  // what the fuck is this
+  cat: function (filenames, done) {
+    ret = ''
+    filenames.forEach(function (filename) {
+      fs.readFile('./' + filename, 'utf8', function (err, data) {
+        console.log(ret)
+        ret += data
       })
-    }
+    })
+    done(ret)
   },
-  head: function (filename) {
+  head: function (filename, done) {
     filename = filename[0]
     fs.readFile('./' + filename, 'utf8', function (err, data) {
-      ret = data.split('\n', 5).join('\n') + '\n'
-      process.stdout.write(ret)
-      process.stdout.write('prompt > ')
+      if (err) ret = 'no such file!'
+      ret = data.split('\n', 5).join('\n')
+      done(ret)
     })
   },
-  tail: function (filename) {
+  tail: function (filename, done) {
     filename = filename[0]
     fs.readFile('./' + filename, 'utf8', function (err, data) {
-      ret = data.split('\n').slice(-5).join('\n') + '\n'
-      process.stdout.write(ret)
-      process.stdout.write('prompt > ')
+      if (err) ret = 'no such file!'
+      ret = data.split('\n').slice(-5).join('\n')
+      done(ret)
     })
   },
   sort: function (filename) {
@@ -61,10 +64,14 @@ module.exports = {
     filename = filename[0]
     process.stdout.write('lol')
   },
-  curl: function (url) {
+  find: function (filename) {
+    filename = filename[0]
+    process.stdout.write('lol')
+  },
+  curl: function (url, done) {
     request(url[0], function (error, response, body) {
       ret = body.toString()
-      process.stdout.write(ret)
+      done(ret)
     })
   }
 }
