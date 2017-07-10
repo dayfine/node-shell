@@ -8,6 +8,9 @@ process.stdout.write('prompt > ')
 
 process.stdin.on('data', function (data) {
   var
+    chains = data.toString().trim().split(/\s*\|\s*/g),
+
+    // then, for each, if necessary
     cmds = data.toString().trim().split(' '),
     cmd = cmds[0],
     args = (cmds.length > 1) ? cmds.slice(1) : undefined,
@@ -20,3 +23,7 @@ process.stdin.on('data', function (data) {
     ? commands[cmd](args, done)
     : process.stdout.write(cmd + ' command not found\nprompt > ')
 })
+
+// test for uniq
+// test for uniq
+// test for uniq
