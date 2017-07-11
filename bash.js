@@ -5,7 +5,7 @@ const
   prompt = chalk.blue('\n+prompt > ')
 
 var
-  cmdList, //uh fugly
+  cmdList = [], // uh fugly
   done = function (output) {
     cmdList.length
       ? pipeline(cmdList.shift(), done, output)
@@ -17,12 +17,12 @@ var
       cmd = parts[0],
       args = parts.slice(1)
 
-    !!commands[cmd]
+    commands[cmd]
       ? commands[cmd](memo, args, done)
       : process.stdout.write(cmd + ' command not found' + prompt)
   }
 
-if (userCommand) commands[userCommand]()
+if (userCommand) commands[userCommand](null, null, done)
 
 process.stdout.write(prompt)
 process.stdin.on('data', function (data) {

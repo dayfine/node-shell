@@ -1,7 +1,8 @@
 const
   fs = require('fs'),
   request = require('request'),
-  chalk = require('chalk')
+  chalk = require('chalk'),
+  path = require('path')
 
 var
   ret, len, data
@@ -34,6 +35,7 @@ function date (stdin, arg, done) {
 function ls (stdin, arg, done) {
   ret = ''
   fs.readdir('.', function (err, files) {
+    if (err) handleErr(err)
     files.forEach(function (file) {
       ret += file.toString() + ('\n')
     })
@@ -43,7 +45,7 @@ function ls (stdin, arg, done) {
 
 function echo (stdin, args, done) {
   done(args
-    .map( arg => (arg[0] === '$') ? process.env[arg.slice(1)] : arg)
+    .map(arg => (arg[0] === '$') ? process.env[arg.slice(1)] : arg)
     .join(' ')
   )
 }
@@ -64,7 +66,7 @@ function fileOp (stdin, filename, done, fn) {
   filename = filename + ''
   function output (err, data) {
     if (err) handleErr(err)
-    data = (!data) ? '': data
+    data = (!data) ? '' : data
     done(fn(data))
   }
 
@@ -106,17 +108,60 @@ function uniq (stdin, arg, done) {
   })
 }
 
-//needs work
 function find (stdin, arg, done) {
+  _serialwalk('.', done)
+}
+
+function _parawalk (dir, done) {
+  // needs fixes
   ret = ''
-  fs.readdir('.', function (err, files) {
-    if (err) ret = 'no such file!'
-    files.forEach(function (file) {
-      ret += file.toString()
+  fs.readdir(dir, function (err, list) {
+    if (err) return done(err)
+    var pending = list.length
+    if (!pending) return done(ret)
+
+    list.forEach(function (file) {
+      file = path.resolve(dir, file)
+
+      fs.stat(file, function (err, stat) {
+        if (stat && stat.isDirectory()) {
+          _parawalk(file, function (err, res) {
+            ret += res + '\n'
+            if (!--pending) done(ret)
+          })
+        } else {
+          ret += file + '\n'
+          if (!--pending) done(ret)
+        }
+      })
     })
-    done(ret)
   })
 }
+
+function _serialwalk (dir, done) {
+  // needs even more fixes
+  ret = ''
+  fs.readdir(dir, function (err, list) {
+    if (err) return done(err)
+    var i = 0
+    ;(function next () {
+      var file = list[i++]
+      if (!file) return done(ret)
+      file = dir + '/' + file
+      fs.stat(file, function (err, stat) {
+        if (stat && stat.isDirectory()) {
+          _serialwalk(file, function (err, res) {
+            ret += res + '\n'
+            next()
+          })
+        } else {
+          ret += file + '\n'
+          next()
+        }
+      })
+    })()
+  })
+};
 
 function grep (stdin, arg, done) {
   arg = arg + ''
@@ -130,7 +175,7 @@ function grep (stdin, arg, done) {
 
 function curl (stdin, arg, done) {
   arg = arg + ''
-  var url = (arg.slice(0,7) === 'http://') ? arg : ('http://' + arg)
+  var url = (arg.slice(0, 7) === 'http://') ? arg : ('http://' + arg)
   request(url, function (err, response, body) {
     if (err) handleErr(err)
     body ? done(body) : done('0')
@@ -138,5 +183,5 @@ function curl (stdin, arg, done) {
 }
 
 function handleErr (err) {
-  process.stderr.write(chalk.red('err: '+ err) + '\n');
+  process.stderr.write(chalk.red('err: ' + err) + '\n')
 }
