@@ -23,7 +23,6 @@ module.exports = {
   handleErr: handleErr
 }
 
-
 function pwd (stdin, arg, done) {
   done(process.cwd())
 }
@@ -120,11 +119,12 @@ function find (stdin, arg, done) {
 }
 
 function grep (stdin, arg, done) {
-  regex = new RegExp(arg,'i')
+  arg = arg + ''
+  var regex = new RegExp(arg, 'i')
   done(stdin
-    .split('/n')
-    .filter(line=>regex.test(line))
-    .join('/n')
+    .split('\n')
+    .filter(line => regex.test(line))
+    .join('\n')
   )
 }
 
