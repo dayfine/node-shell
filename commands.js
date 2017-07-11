@@ -120,19 +120,17 @@ function find (stdin, arg, done) {
 }
 
 function grep (stdin, arg, done) {
-  // to finish
-  ret = ''
-  fs.readdir('.', function (err, files) {
-    if (err) ret = 'no such file!'
-    files.forEach(function (file) {
-      ret += file.toString()
-    })
-    done(ret)
-  })
+  regex = new RegExp(arg,'i')
+  done(stdin
+    .split('/n')
+    .filter(line=>regex.test(line))
+    .join('/n')
+  )
 }
 
 function curl (stdin, arg, done) {
-  var url = (arg.slice(0,7)!=='http://')? ('http://' + arg) : (arg + '')
+  arg = arg + ''
+  var url = (arg.slice(0,7) === 'http://') ? arg : ('http://' + arg)
   request(url, function (err, response, body) {
     if (err) handleErr(err)
     body ? done(body) : done('0')
