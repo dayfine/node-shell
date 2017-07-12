@@ -5,7 +5,7 @@ const
   path = require('path')
 
 var
-  ret, len, data
+  ret, len, data, file
 
 module.exports = {
   pwd: pwd,
@@ -109,49 +109,25 @@ function uniq (stdin, arg, done) {
 }
 
 function find (stdin, arg, done) {
-  _serialwalk('.', done)
-}
-
-function _parawalk (dir, done) {
-  // needs fixes
+  arg = arg + '' || '.'
   ret = ''
-  fs.readdir(dir, function (err, list) {
-    if (err) return done(err)
-    var pending = list.length
-    if (!pending) return done(ret)
-
-    list.forEach(function (file) {
-      file = path.resolve(dir, file)
-
-      fs.stat(file, function (err, stat) {
-        if (stat && stat.isDirectory()) {
-          _parawalk(file, function (err, res) {
-            ret += res + '\n'
-            if (!--pending) done(ret)
-          })
-        } else {
-          ret += file + '\n'
-          if (!--pending) done(ret)
-        }
-      })
-    })
-  })
+  _serialwalk(arg, done)
 }
 
 function _serialwalk (dir, done) {
-  // needs even more fixes
-  ret = ''
   fs.readdir(dir, function (err, list) {
-    if (err) return done(err)
+    if (err) handleErr(err)
     var i = 0
-    ;(function next () {
-      var file = list[i++]
-      if (!file) return done(ret)
-      file = dir + '/' + file
+    next()
+
+    function next () {
+      if (i === list.length) return done(ret)
+      file = path.join(dir, list[i++])
+
       fs.stat(file, function (err, stat) {
         if (stat && stat.isDirectory()) {
           _serialwalk(file, function (err, res) {
-            ret += res + '\n'
+            if (res) ret += res + '\n'
             next()
           })
         } else {
@@ -159,7 +135,7 @@ function _serialwalk (dir, done) {
           next()
         }
       })
-    })()
+    }
   })
 };
 

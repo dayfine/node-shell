@@ -2,7 +2,7 @@ const
   commands = require('./commands'),
   chalk = require('chalk'),
   userCommand = process.argv[2],
-  prompt = chalk.blue('\n+prompt > ')
+  prompt = chalk.blue('\nprompt > ')
 
 var
   cmdList = [], // uh fugly
