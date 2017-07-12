@@ -36,9 +36,7 @@ function ls (stdin, arg, done) {
   ret = ''
   fs.readdir('.', function (err, files) {
     if (err) handleErr(err)
-    files.forEach(function (file) {
-      ret += file.toString() + ('\n')
-    })
+    ret = files.join('\n')
     done(ret)
   })
 }
