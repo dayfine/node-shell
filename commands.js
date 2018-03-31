@@ -4,7 +4,7 @@ const
   chalk = require('chalk'),
   path = require('path')
 
-var
+let
   ret, len, data, file
 
 module.exports = {
@@ -33,8 +33,8 @@ function date (stdin, arg, done) {
 }
 
 function ls (stdin, arg, done) {
-  ret = ''
-  fs.readdir('.', function (err, files) {
+  let ret = ''
+  fs.readdir('.', (err, files) => {
     if (err) handleErr(err)
     ret = files.join('\n')
     done(ret)
@@ -49,10 +49,9 @@ function echo (stdin, args, done) {
 }
 
 function cat (stdin, filenames, done) {
-  ret = ''
-  len = filenames.length
-  filenames.forEach(function (filename) {
-    fs.readFile('./' + filename, 'utf8', function (err, data) {
+  let ret = '', len = filenames.length
+  filenames.forEach(filename => {
+    fs.readFile('./' + filename, 'utf8', (err, data) => {
       ret += data
       len--
       if (len <= 0) done(ret)
@@ -61,10 +60,10 @@ function cat (stdin, filenames, done) {
 }
 
 function fileOp (stdin, filename, done, fn) {
-  filename = filename + ''
+  filename = String(filename)
   function output (err, data) {
     if (err) handleErr(err)
-    data = (!data) ? '' : data
+    data = data || ''
     done(fn(data))
   }
 
@@ -74,57 +73,49 @@ function fileOp (stdin, filename, done, fn) {
 }
 
 function head (stdin, arg, done) {
-  fileOp(stdin, arg, done, function (data) {
-    return data.split('\n').slice(0, 5).join('\n')
-  })
+  fileOp(stdin, arg, done, data => data.split('\n').slice(0, 5).join('\n'))
 }
 
 function tail (stdin, arg, done) {
-  fileOp(stdin, arg, done, function (data) {
-    return data.split('\n').slice(-5).join('\n')
-  })
+  fileOp(stdin, arg, done, data => data.split('\n').slice(-5).join('\n'))
 }
 
 function sort (stdin, arg, done) {
-  fileOp(stdin, arg, done, function (data) {
-    return data.split('\n').sort().join('\n')
-  })
+  fileOp(stdin, arg, done, data => data.split('\n').sort().join('\n'))
 }
 
 function wc (stdin, arg, done) {
-  fileOp(stdin, arg, done, function (data) {
-    return data.split('\n').length
-  })
+  fileOp(stdin, arg, done, data => data.split('\n').length)
 }
 
 function uniq (stdin, arg, done) {
-  fileOp(stdin, arg, done, function (data) {
-    return data.split('\n').filter(function (line, lnNum, arr) {
-      if (lnNum === 0) return true
-      return line !== arr[lnNum - 1]
-    }).join('\n')
+  fileOp(stdin, arg, done, data => {
+    return data
+            .split('\n')
+            .filter((line, lnNum, arr) => lnNum === 0 || line !== arr[lnNum - 1])
+            .join('\n')
   })
 }
 
 function find (stdin, arg, done) {
-  arg = arg + '' || '.'
-  ret = ''
-  _serialwalk(arg, done)
+  let arg = String(arg) || '.'
+  let ret = ''
+  _serialwalk(arg, ret, done)
 }
 
-function _serialwalk (dir, done) {
-  fs.readdir(dir, function (err, list) {
+function _serialwalk (dir, ret, done) {
+  fs.readdir(dir, (err, list) => {
     if (err) handleErr(err)
-    var i = 0
+    let i = 0
     next()
 
     function next () {
       if (i === list.length) return done(ret)
       file = path.join(dir, list[i++])
 
-      fs.stat(file, function (err, stat) {
+      fs.stat(file, (err, stat) => {
         if (stat && stat.isDirectory()) {
-          _serialwalk(file, function (err, res) {
+          _serialwalk(file, ret, (err, res) => {
             if (res) ret += res + '\n'
             next()
           })
@@ -135,11 +126,11 @@ function _serialwalk (dir, done) {
       })
     }
   })
-};
+}
 
 function grep (stdin, arg, done) {
-  arg = arg + ''
-  var regex = new RegExp(arg, 'i')
+  arg = String(arg)
+  let regex = new RegExp(arg, 'i')
   done(stdin
     .split('\n')
     .filter(line => regex.test(line))
@@ -148,11 +139,11 @@ function grep (stdin, arg, done) {
 }
 
 function curl (stdin, arg, done) {
-  arg = arg + ''
-  var url = (arg.slice(0, 7) === 'http://') ? arg : ('http://' + arg)
-  request(url, function (err, response, body) {
+  arg = String(arg)
+  const url = (arg.slice(0, 7) === 'http://') ? arg : ('http://' + arg)
+  request(url, (err, response, body) => {
     if (err) handleErr(err)
-    body ? done(body) : done('0')
+    done(body || '0')
   })
 }
 
